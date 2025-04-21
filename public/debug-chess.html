@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEBUG Chess</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <!-- Include chess pieces definitions first -->
+    <script src="/js/pieces.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>DEBUG Chess - All Pieces Draggable</h1>
+        
+        <div id="game-info">
+            <p>DEBUG MODE: All pieces are draggable</p>
+            <p>Turn: <span id="player-turn">white</span></p>
+        </div>
+        
+        <div id="gameboard"></div>
+        
+        <div id="info-display"></div>
+        <div id="err"></div>
+    </div>
+
+    <script>
+        // Basic variables
+        const game_board = document.querySelector("#gameboard");
+        const player_turn = document.querySelector("#player-turn");
+        const info_display = document.querySelector("#info-display");
+        const width = 8;
+        let player = 'white';
+        
+        // Set up global variables to mimic the app.js structure
+        window.player = 'white';
+        window.playerColor = 'white'; // Just for debugging
+        
+        // Starting pieces
+        const start_pieces = [
+            rook, knight, bishop, queen, king, bishop, knight, rook,
+            pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
+            rook, knight, bishop, queen, king, bishop, knight, rook,
+        ];
+        
+        // Track if board is initialized
+        let boardInitialized = false;
+        
+        // State for dragging
+        let start_positionId;
+        let dragged_element;
+        
+        // Create the chess board
+        function createBoard() {
+            if (boardInitialized) return;
+            
+            console.log("Creating chess board");
+            game_board.innerHTML = '';
+            
+            start_pieces.forEach((start_piece, i) => {
+                const square = document.createElement("div");
+                square.classList.add("square");
+                square.innerHTML = start_piece;
+                square.setAttribute("square-id", i);
+                
+                if (square.firstChild) {
+                    square.firstChild.setAttribute('draggable', true);
+                }
+                
+                const row = Math.floor((63 - i) / 8) + 1;
+                
+                if (row % 2 === 0) {
+                    square.classList.add(i % 2 == 0 ? "beige" : "brown");
+                } else {
+                    square.classList.add(i % 2 == 0 ? "brown" : "beige");
+                }
+                
+                if (i <= 15 && square.firstChild && square.firstChild.firstChild) {
+                    square.firstChild.firstChild.classList.add("black");
+                }
+                if (i >= 48 && square.firstChild && square.firstChild.firstChild) {
+                    square.firstChild.firstChild.classList.add("white");
+                }
+                
+                game_board.append(square);
+            });
+            
+            boardInitialized = true;
+            setupEventListeners();
+        }
+        
+        // Set up event listeners for dragging and dropping
+        function setupEventListeners() {
+            const all_squares = document.querySelectorAll(".square");
+            all_squares.forEach(square => {
+                square.addEventListener('dragstart', drag_start);
+                square.addEventListener('dragover', e => e.preventDefault());
+                square.addEventListener('drop', drag_drop);
+                square.addEventListener('dragend', drag_end);
+            });
+        }
+        
+        // Handle drag start event
+        function drag_start(e) {
+            // In debug mode, we allow any piece to be dragged
+            start_positionId = e.target.parentNode.getAttribute("square-id");
+            dragged_element = e.target;
+            
+            console.log(`Starting drag from position ${start_positionId}`);
+            
+            // Add visual feedback
+            dragged_element.classList.add('moving');
+        }
+        
+        // Handle drag end event
+        function drag_end() {
+            if (dragged_element) {
+                dragged_element.classList.remove('moving');
+            }
+        }
+        
+        // Handle drop event
+        function drag_drop(e) {
+            e.preventDefault();
+            
+            if (!dragged_element) {
+                console.error("No dragged element found");
+                return;
+            }
+            
+            console.log("Drop target:", e.target.tagName, e.target.className);
+            
+            // If dropping on a piece, handle capture
+            if (e.target.classList.contains('piece')) {
+                const targetPiece = e.target;
+                const targetSquare = targetPiece.parentNode;
+                
+                // Check if it's an opponent piece (just for feedback)
+                const isPieceWhite = dragged_element.firstChild?.classList.contains('white');
+                const isTargetWhite = targetPiece.firstChild?.classList.contains('white');
+                
+                if (isPieceWhite !== isTargetWhite) {
+                    // It's an opponent piece - capture
+                    console.log("Capturing piece");
+                    targetSquare.appendChild(dragged_element);
+                    targetPiece.remove();
+                    change_player();
+                } else {
+                    // Same color - reject
+                    info_display.textContent = "Cannot capture your own piece";
+                    setTimeout(() => info_display.textContent = "", 2000);
+                }
+            } 
+            // If dropping on a square
+            else if (e.target.classList.contains('square')) {
+                console.log("Moving to empty square");
+                e.target.appendChild(dragged_element);
+                change_player();
+            } 
+            // If dropping on something inside a square
+            else {
+                // Find the nearest square parent
+                const targetSquare = e.target.closest('.square');
+                if (targetSquare) {
+                    console.log("Moving to parent square");
+                    targetSquare.appendChild(dragged_element);
+                    change_player();
+                }
+            }
+        }
+        
+        // Switch player turn
+        function change_player() {
+            player = player === 'white' ? 'black' : 'white';
+            window.player = player;
+            player_turn.textContent = player;
+            
+            console.log(`Player turn changed to ${player}`);
+        }
+        
+        // Initialize board when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            createBoard();
+        });
+        
+        // Create board immediately if document is already loaded
+        if (document.readyState === 'complete') {
+            createBoard();
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Resources Test</title>
+</head>
+<body>
+    <h1>Resource Testing</h1>
+    <div id="results"></div>
+
+    <script>
+        const resources = [
+            '/css/style.css',
+            '/js/pieces.js',
+            '/js/app.js',
+            '/js/multiplayer.js',
+            '/socket.io/socket.io.js'
+        ];
+
+        window.onload = async function() {
+            const resultsDiv = document.getElementById('results');
+            
+            for (const resource of resources) {
+                try {
+                    const response = await fetch(resource);
+                    if (response.ok) {
+                        resultsDiv.innerHTML += `<p style="color: green">✓ ${resource} loaded successfully</p>`;
+                    } else {
+                        resultsDiv.innerHTML += `<p style="color: red">✗ ${resource} returned status ${response.status}</p>`;
+                    }
+                } catch (error) {
+                    resultsDiv.innerHTML += `<p style="color: red">✗ ${resource} error: ${error.message}</p>`;
+                }
+            }
+
+            // Check if gameboard rendering would work
+            resultsDiv.innerHTML += '<h2>Testing DOM creation:</h2>';
+            try {
+                const testDiv = document.createElement('div');
+                testDiv.id = 'test-gameboard';
+                document.body.appendChild(testDiv);
+                resultsDiv.innerHTML += `<p style="color: green">✓ DOM elements can be created</p>`;
+            } catch (error) {
+                resultsDiv.innerHTML += `<p style="color: red">✗ DOM manipulation error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html> 

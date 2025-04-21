@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        #debug-board {
+            width: 400px;
+            height: 400px;
+            display: flex;
+            flex-wrap: wrap;
+            border: 2px solid black;
+            margin: 20px 0;
+        }
+        .square {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        .beige { background-color: #F0D9B5; }
+        .brown { background-color: #B58863; }
+        #status {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            max-width: 400px;
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chess Board Debug</h1>
+    
+    <div id="status">Status: Checking board creation...</div>
+    
+    <div id="debug-board"></div>
+    
+    <div class="controls">
+        <button id="create-board">Create Debug Board</button>
+        <button id="check-resources">Check Resources</button>
+        <button id="try-socket">Test Socket Connection</button>
+    </div>
+    
+    <div id="debug-output" style="width: 100%; max-width: 600px; margin-top: 20px; overflow-wrap: break-word; white-space: pre-wrap;"></div>
+    
+    <script>
+        const debugOutput = document.getElementById('debug-output');
+        const statusDiv = document.getElementById('status');
+        
+        function log(message) {
+            console.log(message);
+            debugOutput.innerHTML += `${message}\n`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+        
+        document.getElementById('create-board').addEventListener('click', () => {
+            const board = document.getElementById('debug-board');
+            board.innerHTML = '';
+            
+            log('Creating debug board...');
+            statusDiv.textContent = 'Status: Creating board squares...';
+            
+            // Create 64 squares
+            for (let i = 0; i < 64; i++) {
+                const square = document.createElement('div');
+                square.classList.add('square');
+                square.setAttribute('square-id', i);
+                
+                // Add checker pattern
+                const row = Math.floor((63 - i) / 8) + 1;
+                if (row % 2 === 0) {
+                    square.classList.add(i % 2 === 0 ? 'beige' : 'brown');
+                } else {
+                    square.classList.add(i % 2 === 0 ? 'brown' : 'beige');
+                }
+                
+                // Add square number for reference
+                square.textContent = i;
+                
+                board.appendChild(square);
+            }
+            
+            log('Debug board created successfully with 64 squares');
+            statusDiv.textContent = 'Status: Board created successfully!';
+        });
+        
+        document.getElementById('check-resources').addEventListener('click', async () => {
+            log('Checking resources...');
+            statusDiv.textContent = 'Status: Checking resources...';
+            
+            const resources = [
+                '/css/style.css',
+                '/js/pieces.js',
+                '/js/app.js',
+                '/js/multiplayer.js',
+                '/socket.io/socket.io.js'
+            ];
+            
+            for (const resource of resources) {
+                try {
+                    const response = await fetch(resource);
+                    if (response.ok) {
+                        log(`✓ ${resource} loaded successfully`);
+                    } else {
+                        log(`✗ ${resource} returned status ${response.status}`);
+                    }
+                } catch (error) {
+                    log(`✗ ${resource} error: ${error.message}`);
+                }
+            }
+            
+            statusDiv.textContent = 'Status: Resource check completed';
+        });
+        
+        document.getElementById('try-socket').addEventListener('click', () => {
+            log('Testing socket connection...');
+            statusDiv.textContent = 'Status: Testing socket...';
+            
+            try {
+                if (typeof io === 'undefined') {
+                    log('Socket.IO not loaded - loading script dynamically');
+                    const script = document.createElement('script');
+                    script.src = '/socket.io/socket.io.js';
+                    script.onload = initSocket;
+                    script.onerror = () => log('Failed to load Socket.IO script');
+                    document.head.appendChild(script);
+                } else {
+                    initSocket();
+                }
+            } catch (error) {
+                log(`Socket test error: ${error.message}`);
+                statusDiv.textContent = 'Status: Socket test failed';
+            }
+        });
+        
+        function initSocket() {
+            try {
+                const socket = io({
+                    reconnection: true,
+                    reconnectionAttempts: 3,
+                    timeout: 10000
+                });
+                
+                socket.on('connect', () => {
+                    log(`Socket connected with ID: ${socket.id}`);
+                    statusDiv.textContent = 'Status: Socket connected!';
+                });
+                
+                socket.on('connect_error', (error) => {
+                    log(`Socket connection error: ${error.message}`);
+                    statusDiv.textContent = 'Status: Socket connection failed';
+                });
+                
+                socket.on('disconnect', () => {
+                    log('Socket disconnected');
+                });
+                
+                // Auto-disconnect after 5 seconds to clean up
+                setTimeout(() => {
+                    log('Disconnecting test socket');
+                    socket.disconnect();
+                }, 5000);
+            } catch (error) {
+                log(`Socket initialization error: ${error.message}`);
+            }
+        }
+        
+        // Log browser information
+        log(`Browser: ${navigator.userAgent}`);
+        log(`URL: ${window.location.href}`);
+    </script>
+</body>
+</html> 

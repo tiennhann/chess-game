@@ -1,0 +1,2 @@
+project link: https://tiennhann.github.io/chess-game/
+github project link: https://github.com/tiennhann/chess-game

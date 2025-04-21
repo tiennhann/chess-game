@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed Chess Game</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <!-- Include chess pieces definitions -->
+    <script src="/js/pieces.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Fixed Chess Game</h1>
+        
+        <div id="game-info">
+            <p>This is a fixed version for testing</p>
+            <p>Turn: <span id="player-turn">white</span></p>
+        </div>
+        
+        <div id="gameboard"></div>
+        
+        <div id="info-display"></div>
+        <div id="err"></div>
+    </div>
+    
+    <script>
+        // Game state variables
+        const game_board = document.querySelector("#gameboard");
+        const player_turn = document.querySelector("#player-turn");
+        const info_display = document.querySelector("#info-display");
+        const width = 8;
+        let player = 'white';
+        
+        // Starting pieces
+        const start_pieces = [
+            rook, knight, bishop, queen, king, bishop, knight, rook,
+            pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '',
+            pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
+            rook, knight, bishop, queen, king, bishop, knight, rook,
+        ];
+        
+        // Track board initialization
+        let boardInitialized = false;
+        
+        // Create the board
+        function createBoard() {
+            if (boardInitialized) {
+                console.log("Board already initialized, skipping");
+                return;
+            }
+            
+            console.log("Creating chess board");
+            
+            game_board.innerHTML = '';
+            
+            start_pieces.forEach((start_piece, i) => {
+                const square = document.createElement("div");
+                square.classList.add("square");
+                square.innerHTML = start_piece;
+                square.setAttribute("square-id", i);
+                
+                if (square.firstChild) {
+                    square.firstChild.setAttribute('draggable', true);
+                }
+                
+                const row = Math.floor((63 - i) / 8) + 1;
+                
+                if (row % 2 === 0) {
+                    square.classList.add(i % 2 == 0 ? "beige" : "brown");
+                } else {
+                    square.classList.add(i % 2 == 0 ? "brown" : "beige");
+                }
+                
+                if (i <= 15 && square.firstChild && square.firstChild.firstChild) {
+                    square.firstChild.firstChild.classList.add("black");
+                }
+                if (i >= 48 && square.firstChild && square.firstChild.firstChild) {
+                    square.firstChild.firstChild.classList.add("white");
+                }
+                
+                game_board.append(square);
+            });
+            
+            boardInitialized = true;
+            console.log("Board created with all pieces");
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+        
+        // Setup drag-and-drop
+        function setupEventListeners() {
+            const all_squares = document.querySelectorAll(".square");
+            all_squares.forEach(square => {
+                square.addEventListener('dragstart', drag_start);
+                square.addEventListener('dragover', e => e.preventDefault());
+                square.addEventListener('drop', drag_drop);
+                square.addEventListener('dragend', drag_end);
+            });
+        }
+        
+        // Drag state
+        let start_positionId;
+        let dragged_element;
+        
+        // Drag start handler
+        function drag_start(e) {
+            start_positionId = e.target.parentNode.getAttribute("square-id");
+            dragged_element = e.target;
+            
+            // Allow any piece to be dragged in this fixed version
+            console.log(`Dragging piece: ${dragged_element.id} from position ${start_positionId}`);
+        }
+        
+        // Drop handler  
+        function drag_drop(e) {
+            e.preventDefault();
+            
+            if (!dragged_element) return;
+            
+            const target = e.target.classList.contains('square') ? e.target : e.target.parentNode;
+            const targetId = target.getAttribute('square-id');
+            
+            // For testing, allow moving to any square
+            if (target.classList.contains('piece')) {
+                // Handle capture
+                if (target.firstChild?.classList.contains(player === 'white' ? 'black' : 'white')) {
+                    target.parentNode.appendChild(dragged_element);
+                    target.remove();
+                    change_player();
+                } else {
+                    // Can't capture your own pieces
+                    info_display.textContent = "Cannot capture your own pieces";
+                    setTimeout(() => info_display.textContent = "", 2000);
+                }
+            } else {
+                // Move to empty square
+                target.appendChild(dragged_element);
+                change_player();
+            }
+        }
+        
+        // Drag end handler
+        function drag_end() {
+            if (dragged_element) {
+                dragged_element = null;
+            }
+        }
+        
+        // Switch player turns
+        function change_player() {
+            player = player === 'white' ? 'black' : 'white';
+            player_turn.textContent = player;
+            
+            // Update which pieces can be moved
+            const pieces = document.querySelectorAll('.piece');
+            pieces.forEach(piece => {
+                const isPieceCurrentPlayer = piece.firstChild?.classList.contains(player);
+                // In this fixed version, allow moving any piece for easier testing
+                // But highlight the active player's pieces
+                if (isPieceCurrentPlayer) {
+                    piece.classList.add('your-piece');
+                } else {
+                    piece.classList.remove('your-piece');
+                }
+            });
+        }
+        
+        // Initialize the board when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            createBoard();
+            console.log("Board created on page load");
+        });
+        
+        // Create board immediately if page already loaded
+        if (document.readyState === 'complete') {
+            createBoard();
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game Collection</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <style>
+        .game-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        .game-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .game-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .game-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #4285f4;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #3367d6;
+        }
+        .multiplayer-form {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .multiplayer-form input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chess Game Collection</h1>
+        
+        <div class="game-options">
+            <div class="game-card">
+                <h3>Multiplayer Chess</h3>
+                <p>Play chess with a friend online. Create a new game or join an existing one.</p>
+                <a href="/new-game" class="btn">Create New Game</a>
+                <div class="multiplayer-form">
+                    <input type="text" id="game-id-input" placeholder="Enter Game ID">
+                    <button onclick="joinGame()" class="btn">Join Game</button>
+                </div>
+            </div>
+            
+            <div class="game-card">
+                <h3>Standard Chess</h3>
+                <p>Play a regular game of chess on the same device.</p>
+                <a href="/chess" class="btn">Play Chess</a>
+            </div>
+            
+            <div class="game-card">
+                <h3>Fixed Chess</h3>
+                <p>A simplified version with basic functionality for testing.</p>
+                <a href="/fix" class="btn">Play Fixed Chess</a>
+            </div>
+            
+            <div class="game-card">
+                <h3>Debug Chess</h3>
+                <p>Developer version with all pieces draggable for testing.</p>
+                <a href="/debug-chess" class="btn">Open Debug Chess</a>
+            </div>
+            
+            <div class="game-card">
+                <h3>Debug Tools</h3>
+                <p>Tools for testing and troubleshooting the application.</p>
+                <a href="/debug" class="btn">Open Debug Tools</a>
+                <a href="/test" class="btn">Resource Test</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function joinGame() {
+            const gameId = document.getElementById('game-id-input').value.trim();
+            if (gameId) {
+                window.location.href = `/game/${gameId}`;
+            } else {
+                alert('Please enter a valid Game ID');
+            }
+        }
+        
+        // Support for pressing Enter in the input field
+        document.getElementById('game-id-input').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                joinGame();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Chess</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Make sure pieces.js is loaded first -->
+    <script src="/js/pieces.js" type="text/javascript"></script>
+    <script src="/js/app.js" type="text/javascript"></script>
+    <script src="/js/multiplayer.js" type="text/javascript"></script>
+    <style>
+        .nav-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: -10px 0 20px 0;
+        }
+        .nav-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4285f4;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: none;
+            cursor: pointer;
+        }
+        .nav-btn:hover {
+            background-color: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .home-btn {
+            background-color: #34a853;
+        }
+        .home-btn:hover {
+            background-color: #2e8b57;
+        }
+        .new-btn {
+            background-color: #ea4335;
+        }
+        .new-btn:hover {
+            background-color: #c62828;
+        }
+        .copy-btn {
+            background-color: #fbbc05;
+            color: #333;
+            margin-left: 10px;
+        }
+        .copy-btn:hover {
+            background-color: #f9a825;
+        }
+        #game-info {
+            margin-top: 10px;
+        }
+        #game-info p {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Multiplayer Chess</h1>
+        
+        <div class="nav-controls">
+            <a href="/" class="nav-btn home-btn">Home</a>
+            <a href="/new-game" class="nav-btn new-btn" id="new-game-btn">New Game</a>
+        </div>
+        
+        <div id="game-info">
+            <p>Game ID: <span id="game-id">-</span> 
+            <button id="copy-link" onclick="copyGameLink()" class="nav-btn copy-btn">Copy Game Link</button></p>
+            <p>Your Color: <span id="player-color">-</span></p>
+            <p>Turn: <span id="player-turn">white</span></p>
+            <p id="game-status">Waiting for opponent...</p>
+        </div>
+        
+        <div id="gameboard"></div>
+        
+        <div id="info-display"></div>
+        <div id="err"></div>
+    </div>
+    
+    <script>
+        // Debug info
+        console.log("Page loaded");
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM fully loaded");
+            
+            // Force create the chess board as soon as the page loads
+            if (!window.boardInitialized && typeof createBoard === 'function') {
+                console.log("Forcing board creation on page load");
+                createBoard();
+            } else if (!window.boardInitialized) {
+                console.error("createBoard function not found!");
+            } else {
+                console.log("Board already initialized");
+            }
+            
+            // Check if the gameboard has anything in it
+            const gameboardContent = document.getElementById('gameboard').innerHTML;
+            console.log("Gameboard content length:", gameboardContent.length);
+            
+            // Log all important elements
+            console.log("Game ID element:", document.getElementById('game-id'));
+            console.log("Player color element:", document.getElementById('player-color'));
+            console.log("Game status element:", document.getElementById('game-status'));
+            console.log("Gameboard element:", document.getElementById('gameboard'));
+        });
+        
+        // Direct copy function for the button
+        function copyGameLink() {
+            // Extract game ID from URL path
+            const pathParts = window.location.pathname.split('/');
+            const gameId = pathParts.length > 2 && pathParts[1] === 'game' ? pathParts[2] : null;
+            
+            if (!gameId) {
+                alert("No game ID available to copy.");
+                return;
+            }
+            
+            // Update the game ID display
+            const gameIdElement = document.getElementById('game-id');
+            if (gameIdElement) {
+                gameIdElement.textContent = gameId;
+            }
+            
+            // Ensure we use the full game URL
+            const baseUrl = window.location.origin;
+            const gameUrl = `${baseUrl}/game/${gameId}`;
+            console.log("Copying URL:", gameUrl);
+            
+            // Create temporary element
+            const tempElement = document.createElement("textarea");
+            tempElement.value = gameUrl;
+            document.body.appendChild(tempElement);
+            
+            // Select and copy
+            tempElement.select();
+            
+            try {
+                const success = document.execCommand("copy");
+                if (success) {
+                    alert("Game link copied to clipboard! Share it with your opponent.");
+                } else {
+                    alert("Failed to copy link. Please copy the URL from your address bar.");
+                }
+            } catch (err) {
+                console.error("Copy failed:", err);
+                alert("Failed to copy link. Please copy the URL from your address bar.");
+            }
+            
+            // Clean up
+            document.body.removeChild(tempElement);
+            
+            // Try modern clipboard API as backup
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(gameUrl)
+                    .catch(err => console.error('Clipboard API failed:', err));
+            }
+        }
+        
+        // Create window-level game variables to ensure they're accessible
+        window.player = 'white';
+        window.gameInitialized = false;
+        
+        // Check if we need to initialize the board immediately
+        if (document.readyState === 'complete' && !window.boardInitialized && typeof createBoard === 'function') {
+            console.log("Document already loaded, creating board immediately");
+            createBoard();
+        }
+    </script>
+</body>
+</html> 
